@@ -6,58 +6,65 @@
 <style>
     body {
         font-family: sans-serif;
-        max-width: 900px;
+        max-width: 1100px;
         margin: 40px auto;
         padding: 0 20px;
     }
     .img-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-        gap: 20px;
+        grid-template-columns: repeat(5, 1fr); /* 一行固定5列 */
+        gap: 16px;
     }
     .img-card {
         border: 1px solid #ddd;
-        padding: 12px;
+        padding: 8px;
         border-radius: 6px;
         background: #fafafa;
         text-align: center;
+        cursor: pointer; /* 点击手势 */
+        user-select: none;
+        transition: background 0.15s;
+    }
+    .img-card:hover {
+        background: #f0f0f0;
     }
     .img-card img {
-        max-width: 100%;
-        max-height: 160px;
+        width: 100%;
+        max-height: 150px;
         object-fit: contain;
-        margin-bottom: 8px;
         border: 1px solid #ccc;
+        background: white;
     }
     .img-name {
-        font-size: 14px;
-        margin: 6px 0;
-        word-break: break-all;
-    }
-    .copy-btn {
+        font-size: 12px;
         margin-top: 6px;
-        padding: 5px 10px;
-        font-size: 13px;
-        cursor: pointer;
+        word-break: break-all;
+        color: #444;
+    }
+    #msg {
+        margin-top: 20px;
+        font-size: 14px;
+        color: #888;
     }
 </style>
 </head>
 <body>
 
-<h2>图片自动预览与复制地址</h2>
+<h2>图片自动预览（点击即可复制地址）</h2>
 <div id="img-list">加载中...</div>
+<div id="msg"></div>
 
 <script>
 const owner = "Esic25";
 const repo = "picx-images-hosting";
-const directory = "data"; // 仍然扫描 data/ 子目录
+const directory = "data";
 
 const apiURL = `https://api.github.com/repos/${owner}/${repo}/contents/${directory}`;
 
-function copyURL(url) {
-    navigator.clipboard.writeText(url).then(() => {
-        alert("已复制: " + url);
-    });
+function showMsg(text) {
+    const msg = document.getElementById("msg");
+    msg.textContent = text;
+    setTimeout(() => msg.textContent = "", 1500);
 }
 
 fetch(apiURL)
@@ -77,14 +84,20 @@ fetch(apiURL)
             .filter(f => /\.(png|jpg|jpeg|gif|webp|svg)$/i.test(f.name))
             .forEach(f => {
                 const rawURL = `https://${owner}.github.io/${repo}/${directory}/${f.name}`;
+
                 const card = document.createElement("div");
                 card.className = "img-card";
 
                 card.innerHTML = `
-                    <img src="${rawURL}" alt="${f.name}">
+                    <img src="${rawURL}">
                     <div class="img-name">${f.name}</div>
-                    <button class="copy-btn" onclick="copyURL('${rawURL}')">复制地址</button>
                 `;
+
+                // 点击图片卡片直接复制 URL
+                card.addEventListener("click", () => {
+                    navigator.clipboard.writeText(rawURL);
+                    showMsg("已复制：" + f.name);
+                });
 
                 grid.appendChild(card);
             });
