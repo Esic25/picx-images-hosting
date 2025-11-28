@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<title>图片自动列表</title>
+<style>
+    body {
+        font-family: sans-serif;
+        max-width: 900px;
+        margin: 40px auto;
+        padding: 0 20px;
+    }
+    .img-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+        gap: 20px;
+    }
+    .img-card {
+        border: 1px solid #ddd;
+        padding: 12px;
+        border-radius: 6px;
+        background: #fafafa;
+        text-align: center;
+    }
+    .img-card img {
+        max-width: 100%;
+        max-height: 160px;
+        object-fit: contain;
+        margin-bottom: 8px;
+        border: 1px solid #ccc;
+    }
+    .img-name {
+        font-size: 14px;
+        margin: 6px 0;
+        word-break: break-all;
+    }
+    .copy-btn {
+        margin-top: 6px;
+        padding: 5px 10px;
+        font-size: 13px;
+        cursor: pointer;
+    }
+</style>
+</head>
+<body>
+
+<h2>图片自动预览与复制地址</h2>
+<div id="img-list">加载中...</div>
+
+<script>
+const owner = "Esic25";
+const repo = "picx-images-hosting";
+const directory = "data"; // 仍然扫描 data/ 子目录
+
+const apiURL = `https://api.github.com/repos/${owner}/${repo}/contents/${directory}`;
+
+function copyURL(url) {
+    navigator.clipboard.writeText(url).then(() => {
+        alert("已复制: " + url);
+    });
+}
+
+fetch(apiURL)
+    .then(resp => resp.json())
+    .then(files => {
+        const container = document.getElementById("img-list");
+        if (!Array.isArray(files)) {
+            container.innerHTML = "无法获取文件列表";
+            return;
+        }
+
+        container.innerHTML = '<div class="img-grid"></div>';
+        const grid = container.querySelector(".img-grid");
+
+        files
+            .filter(f => f.type === "file")
+            .filter(f => /\.(png|jpg|jpeg|gif|webp|svg)$/i.test(f.name))
+            .forEach(f => {
+                const rawURL = `https://${owner}.github.io/${repo}/${directory}/${f.name}`;
+                const card = document.createElement("div");
+                card.className = "img-card";
+
+                card.innerHTML = `
+                    <img src="${rawURL}" alt="${f.name}">
+                    <div class="img-name">${f.name}</div>
+                    <button class="copy-btn" onclick="copyURL('${rawURL}')">复制地址</button>
+                `;
+
+                grid.appendChild(card);
+            });
+    })
+    .catch(error => {
+        document.getElementById("img-list").innerHTML = "加载失败：" + error;
+    });
+</script>
+
+</body>
+</html>
